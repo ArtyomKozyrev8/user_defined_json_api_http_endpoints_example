@@ -1,5 +1,5 @@
 import json
-from typing import Any, Union
+from typing import Any, Union, Dict
 
 from aiohttp import web
 import sqlite3
@@ -8,7 +8,7 @@ import sqlite3
 class RuleSchemaCrudApi:
     """CRUD methods which are related to user-defined Rule schemas for http api endpoints"""
     @staticmethod
-    def _check_rule_schema_consistency(schema: Any) -> Union[web.Response, str]:
+    def _check_rule_schema_consistency(schema: Any) -> Union[web.Response, Dict[Any, Any]]:
         """Validates user-defined rule schema"""
         if schema == "":
             return web.json_response(
@@ -41,7 +41,7 @@ class RuleSchemaCrudApi:
                 status=400,
             )
 
-        return schema_name
+        return schema
 
     @staticmethod
     async def get_list_of_json_rule_schemas(req: web.Request) -> web.Response:
@@ -54,7 +54,7 @@ class RuleSchemaCrudApi:
             {
                 "schema_id": i[0],
                 "schema_name": i[1],
-                "schema_value": i[2],
+                "schema_value": json.loads(i[2]),
             }
             for i in results
         ]
@@ -66,20 +66,20 @@ class RuleSchemaCrudApi:
         data = await req.post()
         schema = data.get("json_schema", "")
 
-        schema_name = RuleSchemaCrudApi._check_rule_schema_consistency(schema)
-        if isinstance(schema_name, web.Response):
-            return schema_name  # means that some error took place
+        schema = RuleSchemaCrudApi._check_rule_schema_consistency(schema)
+        if isinstance(schema, web.Response):
+            return schema  # means that some error took place
 
         q = "INSERT INTO user_defined_json_http_api_schemas_table (json_schema_name, json_shema_value) VALUES (?,?)"
 
         async with req.app["lock"]:
             try:
                 cur = await req.app["conn"].cursor()
-                await cur.execute(q, (schema_name, json.dumps(schema)))
+                await cur.execute(q, (schema["schema_name"], json.dumps(schema)))
                 await req.app["conn"].commit()
             except sqlite3.IntegrityError:
                 return web.json_response(
-                    data={"message": f"schema_name {schema_name} already exists"},
+                    data={"message": f"schema_name {schema['schema_name']} already exists"},
                     status=400,
                 )
 
@@ -93,13 +93,16 @@ class RuleSchemaCrudApi:
         results = [
             {
                 "schema_id": i[0],
-                "schema_name": i[1],
-                "schema_value": i[2],
+                "schema_name": [1],
+                "schema_value": json.loads(i[2]),
             }
             for i in results
         ]
 
-        return web.json_response(results, status=200)
+        if results:
+            return web.json_response(results[0], status=200)
+
+        return web.json_response({"message": f"failed to get data about new rule schema in database"}, status=400)
 
     @staticmethod
     async def update_rule_schema(req: web.Request) -> web.Response:
@@ -114,9 +117,9 @@ class RuleSchemaCrudApi:
                 status=400,
             )
 
-        schema_name = RuleSchemaCrudApi._check_rule_schema_consistency(schema)
-        if isinstance(schema_name, web.Response):
-            return schema_name  # means that some error took place
+        schema = RuleSchemaCrudApi._check_rule_schema_consistency(schema)
+        if isinstance(schema, web.Response):
+            return schema  # means that some error took place
 
         q = (
             "UPDATE user_defined_json_http_api_schemas_table"
@@ -125,7 +128,7 @@ class RuleSchemaCrudApi:
         )
 
         cur = await req.app["conn"].cursor()
-        await cur.execute(q, (schema_name, json.dumps(schema), schema_id))
+        await cur.execute(q, (schema["schema_name"], json.dumps(schema), schema_id))
         await req.app["conn"].commit()
 
         return web.Response(text="done", status=200)
