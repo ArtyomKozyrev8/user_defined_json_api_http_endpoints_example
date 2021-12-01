@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GUI to create json schemes for user-defined json http api endpoints</title>
+</head>
+<body>
+
+<div style="display: none" id="result_message_div">
+    <div id="inner_result_message_div"></div>
+    <button id="hide_result_message_div">close</button>
+</div>
+
+<button id="show_send_req_div">SEND REQUEST TO API</button>
+<div style="display: none" id="send_req_div">
+        <textarea id="send_req_textarea" name="send_req_textarea" rows="20" cols="50"
+              placeholder="To create json body for request to api start typing here.
+
+Rule schema should be valid json dictionary-like object.
+
+The object should contain key schema_name, value of the key should be string.
+
+schema_name key value indicates which rule schema will be used to process the request json."></textarea>
+    <br><br>
+    <button id="send_req_btn">Send</button>
+</div>
+<button id="show_create_new_schema_div">CREATE NEW SCHEMA</button>
+<div style="display: none" id="create_new_schema_div">
+    <textarea id="new_schema_textarea" name="new_schema_textarea" rows="20" cols="50"
+              placeholder="To create a new rule schema start typing here.
+
+Rule schema should be valid json dictionary-like object.
+
+The object should contain key schema_name, value of the key should be string."></textarea>
+    <br><br>
+    <button id="new_schema_btn">Create</button>
+</div>
+</body>
+
+<script>
+    function display_hide_div(div_id) {
+        let showDiv = document.getElementById(div_id)
+        if (showDiv.style.display === "none") {
+            showDiv.style.display = "block";
+        } else {
+            showDiv.style.display = "none";
+        }
+    }
+
+    function show_op_res_message(mes) {
+        let rMesDiv = document.getElementById("result_message_div");
+        rMesDiv.children[0].innerText = mes;
+        rMesDiv.style.display = "block";
+    }
+
+    function check_valid_json(json_message) {
+        try {
+            JSON.parse(json_message);
+        } catch (e) {
+            show_op_res_message("Incorrect json message format")
+            return false
+        }
+        return true
+    }
+
+    document.getElementById("show_send_req_div").addEventListener("click", () => {
+        display_hide_div("send_req_div");
+    })
+
+    document.getElementById("show_create_new_schema_div").addEventListener("click", () => {
+        display_hide_div("create_new_schema_div");
+    })
+
+    document.getElementById("hide_result_message_div").addEventListener("click", () => {
+        let showDiv = document.getElementById("result_message_div");
+        showDiv.style.display = "none";
+    })
+
+    document.getElementById("send_req_btn").addEventListener("click", async () => {
+        let json_message = document.getElementById("send_req_textarea").value
+        if (check_valid_json(json_message)) {
+            await send_universal_api_request(json_message);
+        }
+    })
+
+    document.getElementById("new_schema_btn").addEventListener("click", async () => {
+        let schema = document.getElementById("new_schema_textarea").value
+        if (check_valid_json(schema)) {
+            let res = await create_new_rule_schema(schema);
+            if (res[0] === 200) {
+                let schemas_table = document.getElementById("schemas_table");
+                let tBody = schemas_table.getElementsByTagName("tbody").item(0);
+                await create_table_body_row(tBody, res[1]);
+                show_op_res_message("Successfully created a new rule schema");
+            }
+        }
+    })
+
+    // api operations block
+    async function send_universal_api_request(json_message) {
+        let url = `/api/v1/universal_api_handler`;
+        let resp = await fetch(
+            url,
+            {
+                method: 'POST',
+                headers: {"Content-Type": "application/json"},
+                body: json_message,
+            });
+        if (resp.status === 200) {
+            let data = await resp.json();
+            show_op_res_message(`Successful request results: ${data["result"]}`);
+        } else if (resp.status === 400) {
+            let data = await resp.json();
+            show_op_res_message(`Bad request results: ${data["message"]}`);
+        } else {
+            let data = await resp.text();
+            show_op_res_message(`Bad request results: ${data}`);
+        }
+    }
+
+
+    async function create_new_rule_schema(schema_value) {
+        let url = "/api/v1/create_new_rule_schema";
+        const formData  = new FormData();
+        formData.append("json_schema", schema_value);
+        let resp = await fetch(url, {method: 'POST', body: formData});
+        let data = "";
+        if (resp.status === 200) {
+            data = await resp.json();
+        } else if (resp.status === 400) {
+            data = await resp.json();
+            data = data["message"];
+            show_op_res_message(`Failed to create a new rule schema: ${data["message"]}`);
+        } else {
+            data = await resp.text();
+            show_op_res_message(`Failed to create a new rule schema: ${data}`);
+        }
+        return [resp.status, data]
+    }
+
+
+    async function fetch_rule_schema_table() {
+        let url = "/api/v1/get_endpoint_rule_schemes";
+        let resp = await fetch(url);
+        if (resp.status === 200) {
+            let data = await resp.json();
+            return data
+        } else {
+            let data = await resp.text();
+            show_op_res_message(`Failed to download schema table: ${data}`);
+        }
+    }
+
+    async function delete_line_in_rule_schema_table(id) {
+        let url = `/api/v1/delete_endpoint_rule_scheme/${id}`;
+        let resp = await fetch(url);
+        if (resp.status === 200) {
+            show_op_res_message(`Successfully removed rule schema`);
+        } else {
+            let data = await resp.text();
+            show_op_res_message(`Failed to remove rule schema: ${data}`);
+        }
+    }
+
+    async function update_line_in_rule_schema_table(id, schema_value) {
+        let url = `/api/v1/update_rule_schema/${id}`;
+        const formData  = new FormData();
+        formData.append("json_schema", schema_value);
+        let resp = await fetch(url, {method: 'POST', body: formData});
+        if (resp.status === 200) {
+            show_op_res_message(`Successfully updated rule schema`);
+        } else if (resp.status === 400) {
+            let data = await resp.json();
+            show_op_res_message(`Failed to update rule schema: ${data["message"]}`);
+        } else {
+            let data = await resp.text();
+            show_op_res_message(`Failed to update rule schema: ${data}`);
+        }
+        return resp.status
+    }
+
+    // end of api operations block
+
+    async function create_table_body_row(tableBody, row) {
+        let body_row = document.createElement("tr");
+        [row["schema_id"], row["schema_name"], row["schema_value"], "save", "delete"].forEach((item, index, array) => {
+            if ((index === 0) || (index === 1)) {
+                let element = document.createElement("td");
+                element.textContent = item;
+                body_row.appendChild(element);
+            } else if (index === 2)  {
+                let element = document.createElement("td");
+                let textArea = document.createElement("textarea");
+                textArea.setAttribute("rows", "20");
+                textArea.setAttribute("cols", "50");
+                textArea.setAttribute(
+                     "title", "Click and start edit to change, then press save button to save changes");
+                textArea.textContent = JSON.stringify(item, undefined, 4);
+                element.appendChild(textArea);
+                body_row.appendChild(element);
+            } else {
+                let element = document.createElement("td");
+                let btn = document.createElement("button")
+                btn.innerText = item;
+                element.appendChild(btn);
+                body_row.appendChild(element);
+            }
+        })
+        // save btn
+        body_row.children[3].children[0].addEventListener("click", async (e) => {
+            let id = e.target.parentNode.parentNode.children[0].innerText;
+            let val = e.target.parentNode.parentNode.children[2].children[0].value; //textarea value
+            if (check_valid_json(val)) {
+                let status = await update_line_in_rule_schema_table(id, val);
+                if (status === 200) {
+                    e.target.parentNode.parentNode.children[1].innerText = JSON.parse(val)["schema_name"];
+                }
+            }
+        })
+        // delete btn
+        body_row.children[4].children[0].addEventListener("click", async (e) => {
+            let id = e.target.parentNode.parentNode.children[0].innerText;
+            await delete_line_in_rule_schema_table(id);
+            tableBody.removeChild(e.target.parentNode.parentNode);
+        })
+
+        tableBody.appendChild(body_row);
+    }
+
+    async function create_table(table_headings, rows_data) {
+        let TheTable = document.createElement("table");
+        TheTable.setAttribute("id", "schemas_table")
+
+        // create table head block
+        let th_row = document.createElement("tr");
+        table_headings.forEach(item => {
+            let element = document.createElement("th");
+            element.innerHTML = item;
+            th_row.appendChild(element);
+        })
+        let tableHead = document.createElement("thead");
+        tableHead.appendChild(th_row);
+        TheTable.appendChild(tableHead);
+
+        // create table body block
+        let tableBody = document.createElement("tbody");
+
+        rows_data.forEach(row => {
+            create_table_body_row(tableBody, row)
+        })
+
+        TheTable.appendChild(tableBody);
+
+        return TheTable
+    }
+
+    async function get_table() {
+        let data = await fetch_rule_schema_table();
+        let table = await create_table(["Schema ID", "Schema Name", "Schema Value", ""], data);
+        let body = document.getElementsByTagName("body").item(0)
+        body.appendChild(table);
+    }
+
+    get_table()
+</script>
+</html>

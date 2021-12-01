@@ -93,7 +93,7 @@ class RuleSchemaCrudApi:
         results = [
             {
                 "schema_id": i[0],
-                "schema_name": [1],
+                "schema_name": i[1],
                 "schema_value": json.loads(i[2]),
             }
             for i in results
@@ -127,9 +127,16 @@ class RuleSchemaCrudApi:
             " WHERE id = ?"
         )
 
-        cur = await req.app["conn"].cursor()
-        await cur.execute(q, (schema["schema_name"], json.dumps(schema), schema_id))
-        await req.app["conn"].commit()
+        async with req.app["lock"]:
+            try:
+                cur = await req.app["conn"].cursor()
+                await cur.execute(q, (schema["schema_name"], json.dumps(schema), schema_id))
+                await req.app["conn"].commit()
+            except sqlite3.IntegrityError:
+                return web.json_response(
+                    data={"message": f"schema_name {schema['schema_name']} already exists"},
+                    status=400,
+                )
 
         return web.Response(text="done", status=200)
 
