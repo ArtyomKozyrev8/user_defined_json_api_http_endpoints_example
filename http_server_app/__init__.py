@@ -25,12 +25,12 @@ async def universal_api_handler(req: web.Application) -> web.Response:
     message = await req.json()
 
     if not isinstance(message, dict):
-        return web.json_response({"message": "Json message should be dictionary like object"}, status=400)
+        return web.Response(text="Json message should be dictionary like object", status=400)
 
     schema_name = message.get("schema_name", "")
 
     if not schema_name:
-        return web.json_response({"message": "Json message should have schema_name key"}, status=400)
+        return web.Response(text="Json message should have schema_name key", status=400)
 
     return web.json_response({"result": "ok"}, status=200)
 
