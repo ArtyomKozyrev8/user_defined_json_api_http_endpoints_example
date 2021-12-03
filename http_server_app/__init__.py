@@ -35,6 +35,13 @@ async def universal_api_handler(req: web.Application) -> web.Response:
     return web.json_response({"result": "ok"}, status=200)
 
 
+async def return_components_module(req: web.Application) -> web.Response:
+    """provide js components file to main.html"""
+    resp = web.FileResponse(r"http_server_app/components/components.js")
+    resp.content_type = "application/javascript"
+    return resp
+
+
 @aiohttp_jinja2.template("main.html")
 async def main_gui_page(req: web.Request) -> Dict[str, Any]:
     """Just index page"""
@@ -51,6 +58,7 @@ async def init_func_standalone(args=None) -> web.Application:
     app.router.add_get("/api/v1/delete_endpoint_rule_scheme/{schema_id}", RuleSchemaCrudApi.delete_rule_scheme)
     app.router.add_post("/api/v1/update_rule_schema/{schema_id}", RuleSchemaCrudApi.update_rule_schema)
     app.router.add_post("/api/v1/universal_api_handler", universal_api_handler)
+    app.router.add_get("/components/components.js", return_components_module)
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader("http_server_app/templates"))
     app.add_routes(
         [
