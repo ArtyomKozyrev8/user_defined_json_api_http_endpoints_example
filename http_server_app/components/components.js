@@ -1,26 +1,38 @@
-class Alarm {
-    constructor() {
-        this.outerDiv = Alarm.#createOuterDiv();
-        this.innerDiv = Alarm.#createInnerDiv();
-        this.btn = Alarm.#createBtn();
-    }
-
-    static #createOuterDiv() {
+class CreateElements {
+    static createOuterDiv(classname) {
         let div = document.createElement("div");
         div.style.display = "none";
+        div.className = classname;
         return div
+    }
+
+    static createBtn(text, classname) {
+        let btn = document.createElement("button");
+        btn.innerText = text;
+        btn.className = classname;
+        return btn
+    }
+
+    static createTextArea(classname, placeholder_text) {
+        let textArea = document.createElement("textarea");
+        textArea.className = classname;
+        textArea.setAttribute("placeholder", placeholder_text);
+
+        return textArea
+    }
+}
+
+class Alarm {
+    constructor() {
+        this.outerDiv = CreateElements.createOuterDiv("alarm");
+        this.innerDiv = Alarm.#createInnerDiv();
+        this.btn = CreateElements.createBtn("close", "action");
     }
 
     static #createInnerDiv() {
         let div = document.createElement("div");
         div.innerText = "";
         return div
-    }
-
-    static #createBtn() {
-        let btn = document.createElement("button");
-        btn.innerText = "close";
-        return btn
     }
 
     render() {
@@ -40,23 +52,19 @@ class Alarm {
 
 class SendJsonReqToApiForm {
     constructor(alarm) {
-        this.hideBtn = SendJsonReqToApiForm.#createBtn("SEND REQUEST TO API");
-        this.outerDiv = SendJsonReqToApiForm.#createOuterDiv();
-        this.textArea = SendJsonReqToApiForm.#createTextArea();
-        this.btnSend = SendJsonReqToApiForm.#createBtn("Send");
+        this.hideBtn = CreateElements.createBtn("SEND REQUEST TO API", "dropdown");
+        this.outerDiv = CreateElements.createOuterDiv("dropdown");
+        this.textArea = CreateElements.createTextArea(
+            "",
+            (
+            "To create json body for request to api start typing here.\n\n" +
+            "Rule schema should be valid json dictionary-like object.\n\n" +
+            "The object should contain key schema_name, value of the key should be string.\n\n" +
+            "schema_name key value indicates which rule schema will be used to process the request json."
+            )
+        );
+        this.btnSend = CreateElements.createBtn("Send", "action");
         this.alarm = alarm;
-    }
-
-    static #createOuterDiv() {
-        let div = document.createElement("div");
-        div.style.display = "none";
-        return div
-    }
-
-    static #createBtn(text) {
-        let btn = document.createElement("button");
-        btn.innerText = text;
-        return btn
     }
 
     async #sendUniversalApiRequest(json_message) {
@@ -83,26 +91,9 @@ class SendJsonReqToApiForm {
         }
     }
 
-    static #createTextArea() {
-        let textArea = document.createElement("textarea");
-        textArea.setAttribute("rows", "20");
-        textArea.setAttribute("cols", "50");
-        let placeholder =  (
-            "To create json body for request to api start typing here.\n\n" +
-            "Rule schema should be valid json dictionary-like object.\n\n" +
-            "The object should contain key schema_name, value of the key should be string.\n\n" +
-            "schema_name key value indicates which rule schema will be used to process the request json."
-        )
-        textArea.setAttribute("placeholder", placeholder);
-
-        return textArea
-    }
-
     render() {
         document.getElementsByTagName("body")[0].appendChild(this.hideBtn);
         this.outerDiv.appendChild(this.textArea);
-        this.outerDiv.appendChild(document.createElement("br"));
-        this.outerDiv.appendChild(document.createElement("br"));
         this.outerDiv.appendChild(this.btnSend);
         document.getElementsByTagName("body")[0].appendChild(this.outerDiv);
         this.btnSend.addEventListener("click", async () => {
@@ -120,24 +111,19 @@ class SendJsonReqToApiForm {
 
 class createNewTableRowForm {
     constructor(alarm, table) {
-        this.hideBtn = createNewTableRowForm.#createBtn("CREATE NEW RULE SCHEMA");
-        this.outerDiv = createNewTableRowForm.#createOuterDiv();
-        this.textArea = createNewTableRowForm.#createTextArea();
-        this.btnCreateNewSchema = createNewTableRowForm.#createBtn("Create");
+        this.hideBtn = CreateElements.createBtn("CREATE NEW RULE SCHEMA", "dropdown");
+        this.outerDiv = CreateElements.createOuterDiv("dropdown");
+        this.textArea = CreateElements.createTextArea(
+            "",
+            (
+            "To create a new rule schema start typing here.\n\n" +
+            "Rule schema should be valid json dictionary-like object.\n\n" +
+            "The object should contain key schema_name, value of the key should be string.\n\n"
+            )
+        );
+        this.btnCreateNewSchema = CreateElements.createBtn("Create", "action");
         this.alarm = alarm;
         this.table = table;
-    }
-
-    static #createOuterDiv() {
-        let div = document.createElement("div");
-        div.style.display = "none";
-        return div
-    }
-
-    static #createBtn(text) {
-        let btn = document.createElement("button");
-        btn.innerText = text;
-        return btn
     }
 
     async #createNewRuleSchema(schema_value) {
@@ -155,25 +141,9 @@ class createNewTableRowForm {
         return [resp.status, data]
     }
 
-    static #createTextArea() {
-        let textArea = document.createElement("textarea");
-        textArea.setAttribute("rows", "20");
-        textArea.setAttribute("cols", "50");
-        let placeholder =  (
-            "To create a new rule schema start typing here.\n\n" +
-            "Rule schema should be valid json dictionary-like object.\n\n" +
-            "The object should contain key schema_name, value of the key should be string.\n\n"
-        )
-        textArea.setAttribute("placeholder", placeholder);
-
-        return textArea
-    }
-
     render() {
         document.getElementsByTagName("body")[0].appendChild(this.hideBtn);
         this.outerDiv.appendChild(this.textArea);
-        this.outerDiv.appendChild(document.createElement("br"));
-        this.outerDiv.appendChild(document.createElement("br"));
         this.outerDiv.appendChild(this.btnCreateNewSchema);
         document.getElementsByTagName("body")[0].appendChild(this.outerDiv);
         this.btnCreateNewSchema.addEventListener("click", async () => {
@@ -202,16 +172,11 @@ class createNewTableRowForm {
 
 class Table {
     constructor(alarm, headers) {
-        this.outerDiv = Table.#createOuterDiv();
+        this.outerDiv = document.createElement("div");
         this.alarm = alarm;
         this.tableRows = null; // probably will be used if add searchbar, etc, not used
         this.headers = headers;
         this.tableBody = document.createElement("tbody");
-    }
-
-    static #createOuterDiv() {
-        let div = document.createElement("div");
-        return div
     }
 
     static async #getDataForTable() {
@@ -265,9 +230,8 @@ class Table {
                     body_row.appendChild(element);
                 } else if (index === 2)  {
                     let element = document.createElement("td");
-                    let textArea = document.createElement("textarea");
-                    textArea.setAttribute("rows", "20");
-                    textArea.setAttribute("cols", "50");
+                    let textArea = CreateElements.createTextArea(
+                        "in_table", "Write rule schema here");
                     textArea.setAttribute(
                         "title", "Click and start edit to change, then press save button to save changes");
                     textArea.textContent = JSON.stringify(item, undefined, 4);
@@ -275,8 +239,7 @@ class Table {
                     body_row.appendChild(element);
                 } else {
                     let element = document.createElement("td");
-                    let btn = document.createElement("button")
-                    btn.innerText = item;
+                    let btn = CreateElements.createBtn(item, "in_table");
                     element.appendChild(btn);
                     body_row.appendChild(element);
                 }
