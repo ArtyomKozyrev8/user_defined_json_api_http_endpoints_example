@@ -9,15 +9,18 @@
 <body class="dark">
 </body>
 <script type="module">
-    import {Alarm, SendJsonReqToApiForm, createNewTableRowForm, Table} from "/components/components.js"
+    import {Alarm, SendJsonReqToApiForm, createNewTableRowForm, Table, searchBoxTable} from "/components/components.js"
     let alarmDiv = new Alarm();
     alarmDiv.render();
     let sendTestReqFormDiv = new SendJsonReqToApiForm(alarmDiv);
     sendTestReqFormDiv.render();
     let createNewTableRowFormDiv  = new createNewTableRowForm(alarmDiv, null)
     createNewTableRowFormDiv.render()
+    let searchBox = new searchBoxTable()
+    searchBox.render()
     let tableDiv = new Table(alarmDiv, ["Schema ID", "Schema Name", "Schema Value", "", ""]);
     tableDiv.render();
     createNewTableRowFormDiv.table = tableDiv;
+    searchBox.table = tableDiv;
 </script>
 </html>

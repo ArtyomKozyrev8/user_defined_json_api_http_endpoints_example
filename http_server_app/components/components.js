@@ -57,10 +57,11 @@ class SendJsonReqToApiForm {
         this.textArea = CreateElements.createTextArea(
             "",
             (
-            "To create json body for request to api start typing here.\n\n" +
+            "To create json body api request start typing here.\n\n" +
             "Rule schema should be valid json dictionary-like object.\n\n" +
-            "The object should contain key schema_name, value of the key should be string.\n\n" +
-            "schema_name key value indicates which rule schema will be used to process the request json."
+            "The object should contain key schema_name.\n\n" +
+            "Value of the key should be string.\n\n" +
+            "schema_name defines which rule schema to use for the request."
             )
         );
         this.btnSend = CreateElements.createBtn("Send", "action");
@@ -157,6 +158,7 @@ class createNewTableRowForm {
             let [resp, newTableRow] = await this.#createNewRuleSchema(val);
             if (resp === 200) {
                 this.table.appendTableBodyRow(newTableRow);
+                this.table.tableRows.push(newTableRow); // append new row
                 this.alarm.displayAlarm("New rule schema was successfully created");
             }
         });
@@ -170,13 +172,46 @@ class createNewTableRowForm {
     }
 }
 
+class searchBoxTable {
+    constructor(table) {
+        this.outerDiv = document.createElement("div");
+        this.table = table;
+        this.searchBox = this.#createInputText("search_box");
+    }
+
+    #createInputText(class_name) {
+        let searchBox = document.createElement("input");
+        searchBox.setAttribute("type", "text");
+        searchBox.className = class_name;
+        searchBox.placeholder = "Start printing here to search..."
+        return searchBox
+    }
+
+    render() {
+        this.outerDiv.appendChild(this.searchBox);
+        this.searchBox.addEventListener("keyup", (e) => {
+            this.table.filterDisplayTableBody(e.target.value);
+        })
+        document.getElementsByTagName("body")[0].appendChild(this.outerDiv);
+
+    }
+}
+
 class Table {
     constructor(alarm, headers) {
         this.outerDiv = document.createElement("div");
         this.alarm = alarm;
-        this.tableRows = null; // probably will be used if add searchbar, etc, not used
+        this.tableRows = [] // probably will be used if add searchbar, etc, not used
         this.headers = headers;
         this.tableBody = document.createElement("tbody");
+    }
+
+    filterDisplayTableBody(schema_name) {
+        const visRows = this.tableRows.filter(i => i["schema_name"].toLowerCase().includes(schema_name.toLowerCase()))
+        this.tableBody.innerHTML = "";
+        visRows.forEach(row => {
+            this.appendTableBodyRow(row);
+        })
     }
 
     static async #getDataForTable() {
@@ -196,6 +231,7 @@ class Table {
         let resp = await fetch(url);
         if (resp.status === 200) {
             this.alarm.displayAlarm(`Successfully removed rule schema`);
+            this.tableRows = this.tableRows.filter(i => i["schema_id"] != id); // update list of rows
         } else {
             let data = await resp.text();
             this.alarm.displayAlarm(`Failed to remove rule schema: ${data}`);
@@ -211,7 +247,12 @@ class Table {
         let data;
         if (resp.status === 200) {
             data = await resp.json();
-            data = data["result"]
+            data = data["result"];
+            let rowToUpdate = this.tableRows.find(i => i["schema_id"] == id);
+            // update list of rows element fields
+            rowToUpdate["schema_id"] = data["schema_id"];
+            rowToUpdate["schema_name"] = data["schema_name"];
+            rowToUpdate["schema_value"] = data["schema_value"];
             this.alarm.displayAlarm(`Successfully updated rule schema`);
         } else {
             data = await resp.text();
@@ -275,7 +316,7 @@ class Table {
             this.tableBody.appendChild(body_row);
         }
 
-    async #createTable() {
+    async #createTable(rows) {
         let TheTable = document.createElement("table");
 
         // create table head block
@@ -289,7 +330,7 @@ class Table {
         tableHead.appendChild(th_row);
         TheTable.appendChild(tableHead);
 
-        this.tableRows.forEach(row => {
+        rows.forEach(row => {
             this.appendTableBodyRow(row);
         })
 
@@ -299,15 +340,16 @@ class Table {
     }
 
     async render() {
-        this.tableRows = await Table.#getDataForTable();
+        const rows = await Table.#getDataForTable();
         if ( typeof this.tableRows === "string") {
             this.alarm.displayAlarm(`Failed to download schema table: ${this.tableRows}. Try to reload page`);
             return
         }
-        let table = await this.#createTable();
+        let table = await this.#createTable(rows);
+        rows.forEach(i => this.tableRows.push(i));
         this.outerDiv.appendChild(table);
         document.getElementsByTagName("body")[0].appendChild(this.outerDiv);
     }
 }
 
-export {Alarm, SendJsonReqToApiForm, createNewTableRowForm, Table}
+export {Alarm, SendJsonReqToApiForm, createNewTableRowForm, Table, searchBoxTable}
