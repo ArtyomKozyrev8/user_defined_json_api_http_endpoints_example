@@ -1,0 +1,16 @@
+Jinja2==3.0.3
+MarkupSafe==2.0.1
+aiohttp==3.8.1
+aiohttp-jinja2==1.5
+aiosignal==1.2.0
+aiosqlite==0.17.0
+async-timeout==4.0.1
+attrs==21.2.0
+charset-normalizer==2.0.8
+frozenlist==1.2.0
+idna==3.3
+multidict==5.2.0
+pip==21.3.1
+setuptools==59.3.0
+typing-extensions==4.0.0
+yarl==1.7.2
