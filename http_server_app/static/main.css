@@ -13,8 +13,8 @@ button.dropdown:hover {background-color: #fff8dc; font-weight: bold;}
 
 div.dropdown {border: 2px solid #dbd7d7; background-color: #f5f5f5; width: auto; position: relative; height: 350px;}
 
-textarea {background-color: #f5f5f5 ; width: 100%; padding: 0; margin: 0; height: 100%; resize: none; font-size: 20px;
-    cursor: text;}
+textarea {background-color: #f5f5f5 ; width: calc(100% - 8px); margin: 0; height: calc(100% - 8px);
+    resize: none; font-size: 20px; cursor: text;}
 
 textarea::-webkit-scrollbar {width: 0.3em;}
 
@@ -31,8 +31,10 @@ button.action {color: #393939; position: absolute; right: 15px; top: 10px;
 
 button.action:hover {background-color: cornsilk; color: #000000; font-weight: bold;}
 
-div.alarm {border: 2px solid #dbd7d7; background-color: #414141; width: auto; position: sticky; height: 70px;
+div.alarm {border: 2px solid #dbd7d7; background-color: #414141; width: auto; position: sticky; min-height: 70px; height: auto;
     font-size: 24px; text-align: center; top: 5px; z-index: 10; }
+
+body > div.alarm > div { margin-left: 130px; margin-right: 150px; padding-bottom: 20px;}
 
 body > div.alarm > div {margin-top: 20px;}
 
@@ -52,6 +54,8 @@ button.in_table {color: #393939; border: 2px solid #f5f5f5; padding: 5px; border
 
 button.in_table:hover {background-color: cornsilk; color: #000000; font-weight: bold;}
 
-.search_box {width: 100%; font-size: 20px; margin: 0; padding: 0; height: 40px; border: 0px;}
+.search_box {width: 99.8%; font-size: 20px; margin: 0; padding: 0; height: 40px; border: 0px;}
+
+input.search_box { padding-left: 0.2%; }
 
 input.search_box:hover { background-color: cornsilk;}
