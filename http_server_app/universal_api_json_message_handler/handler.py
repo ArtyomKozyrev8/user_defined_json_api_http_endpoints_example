@@ -5,11 +5,13 @@ the functions are used in the file code.
 We do it due to eval function rules, check global, local scope rules for eval in official Python documentation.
 """
 
+import asyncio
 from typing import Dict, Any, Callable
 from http_server_app.user_api_predefined_functions.some_easy_func import (
     power_3_minus_1,
     square,
     add_200,
+    adouble,
 )
 
 
@@ -42,7 +44,11 @@ async def process_data_based_on_rule_schema(
                 await _get_key_result(_json_data[i], _schema[i], "_".join([key, i]))
         else:
             if 'def' not in _schema:  # lambda or predefined function (in app code)
-                r[key.lstrip("_")] = (eval(f"{_schema}(_json_data)"))
+                temp = (eval(f"{_schema}(_json_data)"))
+                if asyncio.iscoroutine(temp):
+                    r[key.lstrip("_")] = await temp  # async predefined function
+                else:
+                    r[key.lstrip("_")] = temp  # sync predefined function or lambda function result
             else:  # sync or async function defined in rule schema
                 if "async" not in _schema:
                     r[key.lstrip("_")] = _make_func(_schema)(_json_data)

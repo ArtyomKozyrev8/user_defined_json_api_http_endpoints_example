@@ -7,6 +7,8 @@ should be imported to that file.
 This should be so due to eval function scope rules.
 """
 
+import asyncio
+
 
 def square(item: int) -> int:
     """some user defined function"""
@@ -21,3 +23,8 @@ def power_3_minus_1(item: int) -> int:
 def add_200(item: int) -> int:
     """one more user defined function"""
     return item + 200
+
+
+async def adouble(item: int) -> int:
+    await asyncio.sleep(2)
+    return item * 2
