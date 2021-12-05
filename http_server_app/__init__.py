@@ -1,5 +1,7 @@
 import asyncio
+import json
 from typing import Dict, Any
+import traceback
 
 from aiohttp import web
 import aiohttp_jinja2
@@ -7,6 +9,7 @@ import jinja2
 
 from http_server_app.init_ops.init_db_ops import init_db
 from http_server_app.apis.crud_api import RuleSchemaCrudApi
+from http_server_app.universal_api_json_message_handler.handler import process_data_based_on_rule_schema
 
 
 async def on_start(app: web.Application) -> None:
@@ -32,7 +35,33 @@ async def universal_api_handler(req: web.Application) -> web.Response:
     if not schema_name:
         return web.Response(text="Json message should have schema_name key", status=400)
 
-    return web.json_response({"result": "ok"}, status=200)
+    q = ("SELECT json_shema_value FROM user_defined_json_http_api_schemas_table"
+         " WHERE json_schema_name = ? LIMIT 1;")
+
+    cur = await req.app["conn"].cursor()
+    await cur.execute(q, (str(schema_name), ))
+    result = await cur.fetchall()
+
+    if not result:
+        return web.Response(text=f"Rule schema name {str(schema_name)} was not found in database", status=400)
+    try:
+        json_schema: dict = json.loads(result[0][0])
+        del json_schema['schema_name']  # have to remove "schema_name" key from schema before validation
+    except Exception:
+        return web.Response(
+            text=f"Rule schema name {str(schema_name)} is not valid json, you have to edit the schema", status=400)
+
+    try:
+        res = await process_data_based_on_rule_schema(message, json_schema)
+    except Exception:
+        tb = traceback.format_exc()
+        print(tb)
+        return web.Response(
+            text=f"Failed to validate the request in accordance with schema. Please check server logs.",
+            status=400,
+        )
+
+    return web.json_response({"result": str(res)}, status=200)
 
 
 async def return_components_module(req: web.Application) -> web.Response:
