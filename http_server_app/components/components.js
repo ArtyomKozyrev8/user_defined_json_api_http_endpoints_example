@@ -58,13 +58,13 @@ class SendJsonReqToApiForm {
             "",
             (
             "To create json body api request start typing here.\n\n" +
-            "Rule schema should be valid json dictionary-like object.\n\n" +
+            "JSON message should be valid json dictionary-like object.\n\n" +
             "The object should contain key schema_name.\n\n" +
             "Value of the key should be string.\n\n" +
             "schema_name defines which rule schema to use for the request."
             )
         );
-        this.btnSend = CreateElements.createBtn("Send", "action");
+        this.btnSend = CreateElements.createBtn("send", "action");
         this.alarm = alarm;
     }
 
@@ -85,7 +85,7 @@ class SendJsonReqToApiForm {
             });
         if (resp.status === 200) {
             let data = await resp.json();
-            this.alarm.displayAlarm(`Successful request results: ${data["result"]}`);
+            this.alarm.displayAlarm(`Success: ${data["result"]}`);
         } else {
             let data = await resp.text();
             this.alarm.displayAlarm(`Bad request results: ${data}`);
@@ -122,7 +122,7 @@ class createNewTableRowForm {
             "The object should contain key schema_name, value of the key should be string.\n\n"
             )
         );
-        this.btnCreateNewSchema = CreateElements.createBtn("Create", "action");
+        this.btnCreateNewSchema = CreateElements.createBtn("create", "action");
         this.alarm = alarm;
         this.table = table;
     }
@@ -183,7 +183,7 @@ class searchBoxTable {
         let searchBox = document.createElement("input");
         searchBox.setAttribute("type", "text");
         searchBox.className = class_name;
-        searchBox.placeholder = "Start printing here to search..."
+        searchBox.placeholder = "Start printing here to search for rule schema name ..."
         return searchBox
     }
 
