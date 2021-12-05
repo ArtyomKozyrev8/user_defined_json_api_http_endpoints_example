@@ -24,7 +24,7 @@ class RuleSchemaCrudApi:
             return web.Response(text="json_schema should contain schema_name key", status=400)
 
         if not isinstance(schema_name, str):
-            return web.Response(text="schema_name key value should be string or integer", status=400)
+            return web.Response(text="schema_name key value should be string", status=400)
 
         return schema
 
