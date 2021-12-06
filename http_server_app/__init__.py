@@ -2,6 +2,7 @@ import asyncio
 import json
 from typing import Dict, Any
 import traceback
+import logging
 
 from aiohttp import web
 import aiohttp_jinja2
@@ -55,7 +56,7 @@ async def universal_api_handler(req: web.Application) -> web.Response:
         res = await process_data_based_on_rule_schema(message, json_schema)
     except Exception:
         tb = traceback.format_exc()
-        print(tb)
+        logging.getLogger("app").error(f"{tb}")
         return web.Response(
             text=f"Failed to validate the request in accordance with schema. Please check server logs.",
             status=400,
@@ -77,8 +78,21 @@ async def main_gui_page(req: web.Request) -> Dict[str, Any]:
     return {}
 
 
+def setup_logging():
+    """Setup logging for the app"""
+    logging.getLogger("aiosqlite").setLevel(logging.ERROR)
+    logging.getLogger("aiohttp.access").setLevel(logging.ERROR)
+    lg = logging.getLogger("app")
+    log_handler = logging.StreamHandler()
+    fmt = logging.Formatter("%(levelname)s | %(asctime)s | %(message)s")
+    log_handler.setFormatter(fmt)
+    lg.addHandler(log_handler)
+    lg.setLevel(logging.ERROR)
+
+
 async def init_func_standalone(args=None) -> web.Application:
     """Application factory for standalone run"""
+    setup_logging()
     app = web.Application()
     app["lock"] = asyncio.Lock()
     app.router.add_get("/main", main_gui_page)
