@@ -25,6 +25,6 @@ def add_200(item: int) -> int:
     return item + 200
 
 
-async def adouble(item: int) -> int:
+async def adouble_minus_one(item: int) -> int:
     await asyncio.sleep(2)
-    return item * 2
+    return item * 2 - 1
