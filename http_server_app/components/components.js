@@ -22,6 +22,19 @@ class CreateElements {
     }
 }
 
+async function asyncBtnClickWrapper (btn, asyncAction) {
+    const text = btn.innerText;
+    try {
+        btn.innerText = "wait ...";
+        btn.disabled = true;
+        let r = await asyncAction;
+        return r
+    } finally {
+        btn.innerText = text;
+        btn.disabled = false;
+    }
+}
+
 class Alarm {
     constructor() {
         this.outerDiv = CreateElements.createOuterDiv("alarm");
@@ -98,7 +111,7 @@ class SendJsonReqToApiForm {
         this.outerDiv.appendChild(this.btnSend);
         document.getElementsByTagName("body")[0].appendChild(this.outerDiv);
         this.btnSend.addEventListener("click", async () => {
-            await this.#sendUniversalApiRequest(this.textArea.value);
+            await asyncBtnClickWrapper(this.btnSend, this.#sendUniversalApiRequest(this.textArea.value));
         });
         this.hideBtn.addEventListener("click", () => {
             if (this.outerDiv.style.display === "none") {
@@ -154,8 +167,8 @@ class createNewTableRowForm {
                 this.alarm.displayAlarm("Incorrect json message format");
                 return
             }
-            let val = this.textArea.value;
-            let [resp, newTableRow] = await this.#createNewRuleSchema(val);
+            let [resp, newTableRow] =
+                await asyncBtnClickWrapper(this.btnCreateNewSchema, this.#createNewRuleSchema(this.textArea.value));
             if (resp === 200) {
                 this.table.appendTableBodyRow(newTableRow);
                 this.table.tableRows.push(newTableRow); // append new row
@@ -297,7 +310,9 @@ class Table {
                     return
                 }
 
-                let [status, new_val] = await this.#updateLineSchemaDb(id, val);
+                let [status, new_val] =
+                    await asyncBtnClickWrapper(body_row.children[3].children[0], this.#updateLineSchemaDb(id, val));
+
                 if (status === 200) {
                     row.children[0].innerText = new_val["schema_id"];
                     row.children[1].innerText = new_val["schema_name"];
@@ -308,7 +323,7 @@ class Table {
             body_row.children[4].children[0].addEventListener("click", async (e) => {
                 let row = e.target.parentNode.parentNode;
                 let id = row.children[0].innerText;
-                let status = await this.#deleteTableLineDb(id);
+                let status = await asyncBtnClickWrapper(body_row.children[4].children[0], this.#deleteTableLineDb(id));
                 if (status === 200) {
                     this.tableBody.removeChild(row);
                 }
