@@ -21,7 +21,7 @@ value, it allows server to understand which Rule Schema should be used to proces
 
 ### How to run the App ?
 
-To run server locally for test or development purpose:
+**To run app locally for test or development purpose:**
 
 1. create `venv`
 
@@ -30,6 +30,14 @@ To run server locally for test or development purpose:
 3. `python -m aiohttp.web -H 0.0.0.0 -P 5879 http_server_app:init_func_standalone` - Windows
 
 3. `python3 -m aiohttp.web -H 0.0.0.0 -P 5879 http_server_app:init_func_standalone` - Linux
+
+**To run server app in docker container without `Docker-Compose`**
+
+1. `cd user_defined_json_api_http_endpoints_example`
+
+2. `docker build -t app .`
+
+3. `docker run -d -v app_storage:"/usr/src/database" --name app -p 5879:5879 app`
 
 ### How can I write Rule Schema?
 
