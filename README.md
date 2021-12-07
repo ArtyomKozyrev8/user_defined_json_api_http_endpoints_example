@@ -33,6 +33,8 @@ To run server locally for test or development purpose:
 
 ### How can I write Rule Schema?
 
+##### **NOTE: To create Rule Schemas you need to have some `Python` knowledge**
+
 **Let's start from showing Test message json, the message will be used with all Rule schema examples:**
 
 ```json
