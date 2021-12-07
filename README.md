@@ -17,6 +17,8 @@ The end user creates json Rule Schema in GUI. Rule schema is a json message, whi
 Then user sends test request to api with json in body, the message should also contain "schema_name" key with the same
 value, it allows server to understand which Rule Schema should be used to process the message.
 
+![Demo1](images/a1.png)
+
 ### How to run the App ?
 
 To run server locally for test or development purpose:
