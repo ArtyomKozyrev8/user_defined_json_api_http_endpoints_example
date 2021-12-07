@@ -19,6 +19,13 @@ value, it allows server to understand which Rule Schema should be used to proces
 
 ![Demo1](images/a1.png)
 
+### How to understand how the App works?
+
+Main logic in `http_server_app/universal_api_json_message_handler/handler.py`. You also need to understand how `exec`,
+`eval` works in Python.
+
+Also you can check `http_server_app/user_api_predefined_functions/some_easy_func.py`
+
 ### How to run the App ?
 
 **To run app locally for test or development purpose:**
@@ -47,9 +54,11 @@ value, it allows server to understand which Rule Schema should be used to proces
 
 ### How can I write Rule Schema?
 
-##### **NOTE: To create Rule Schemas you need to have some `Python` knowledge**
+#### NOTE: To create Rule Schemas you need to have some `Python` knowledge
 
 **Let's start from showing Test message json, the message will be used with all Rule schema examples:**
+
+Test message:
 
 ```json
 {
@@ -252,9 +261,58 @@ Result:
 }
 ```
 
-### How to understand how the App works?
+### I created Rule Schema and sent test message, but it does not work. How to debug?
 
-Main logic in `http_server_app/universal_api_json_message_handler/handler.py`. You also need to understand how `exec`,
-`eval` works in Python.
+First of all, there are some easy to find and solve errors like incorrect json or no "schema_name" key, so just read
+error message and GUI and make the required steps.
 
-Also you can check `http_server_app/user_api_predefined_functions/some_easy_func.py`
+On the other hand it could be some difficult errors which are related to your test message. 
+
+In the example we'll be using the same Test Message and Rule Schema `mytest`
+
+**1. Let's make error in Test message**
+
+Let's change `"x": 4` to `"x": "4"` in Test Message
+
+GUI will ask you to check server logs `docker logs app` or just see logs in your IDE/console/etc
+
+You will see the following error message `Exception: Problem key: x. Problem schema part: (lambda x: (x + 1 - 100) * 200). Problem json_data: 4`
+
+It does not say exactly where error is, but shows where the issue took place
+
+Revert all bad changes and now let's make some error in Rule Schema
+
+**2. Let's make error in Rule schema. Make error in name of predefined function**
+
+Let's change `"zzz": "power_3_minus_1",` to `"zzz": "power_3_minus_",`
+
+Error message in server logs `Exception: Problem key: zzz. Problem schema part: power_3_minus_. Problem json_data: 10`
+
+Check predefined functions in `http_server_app/user_api_predefined_functions/some_easy_func.py` and imports in 
+`http_server_app/universal_api_json_message_handler/handler.py` and you'll find 
+
+Revert all bad changes and now let's make another some error in Rule Schema
+
+**3. Let's make some error in API user defined Rule Schema:**
+
+Let's change `"z": "def outer_main(x):\n\treturn plus_100(x)\ndef plus_100(x):\n\treturn x + 100",` to 
+`"z": "def outer_main(x):\n\treturn plus_10(x)\ndef plus_100(x):\n\treturn x + 100",` We made error in function name:
+`plus_10(x)`
+
+Error message in server log:
+
+```
+    raise Exception(
+Exception: Problem key: z. Problem schema part: def outer_main(x):
+        return plus_10(x)
+def plus_100(x):
+        return x + 100. Problem json_data: 15
+```
+
+It is difficult to say where error could be in the case, so always make sure that your Python code for Rule Schema 
+is valid one
+
+
+
+**I hope you got the idea how to debug the stuff, anyway feel free to to alarm me in issues or by email if you find
+some bugs or get some problems.**
