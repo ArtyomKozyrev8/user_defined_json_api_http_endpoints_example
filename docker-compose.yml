@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  app:
+    image: "app:latest"
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5879:5879"
+    volumes:
+      - app_storage:/usr/src/database
+    restart: always
+volumes:
+  app_storage:
+    name: "app_storage"

@@ -39,6 +39,12 @@ value, it allows server to understand which Rule Schema should be used to proces
 
 3. `docker run -d -v app_storage:"/usr/src/database" --name app -p 5879:5879 app`
 
+**To run server app with `Docker-Compose`**
+
+1. `cd user_defined_json_api_http_endpoints_example`
+
+2. `docker-compose up -d`
+
 ### How can I write Rule Schema?
 
 ##### **NOTE: To create Rule Schemas you need to have some `Python` knowledge**
